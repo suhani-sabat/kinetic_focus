@@ -1,232 +1,253 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-
-<title>Kinetic Focus</title>
-
-<link rel="stylesheet" href="style.css">
-
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinetic Focus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
-
 <body>
 
-<!-- LOGIN / SIGNUP PAGE -->
-
-<div id="loginPage" class="login-container">
-
-<div class="login-card">
-
-<h2>Login</h2>
-
-<input id="loginUser" placeholder="Username">
-<input id="loginPass" type="password" placeholder="Password">
-
-<button class="primary-btn" onclick="login()">Login</button>
-
-</div>
-
-
-<div class="signup-card">
-
-<h2>Sign Up</h2>
-
-<input id="signupUser" placeholder="Username">
-<input id="signupPass" type="password" placeholder="Password">
-
-<button class="primary-btn" onclick="signup()">Create Account</button>
-
-</div>
-
-</div>
-
-
-<!-- MAIN APPLICATION -->
-
-<div id="appContent" style="display:none;">
-
-<header class="navbar">
-
-<div class="logo">⚡ Kinetic Focus</div>
-
-<nav>
-<a class="nav-link" onclick="showPage('dashboard')">Dashboard</a>
-<a class="nav-link" onclick="showPage('journal')">Journal</a>
-<a class="nav-link" onclick="showPage('reports')">Reports</a>
-<a class="nav-link" onclick="showPage('ai')">AI Coach</a>
-</nav>
-
-</header>
-
-
-
-<div class="container">
-
-<section id="dashboard" class="page">
-
-<div class="stats">
-
-<div class="card">
-<p>Active learners</p>
-<h2>1</h2>
-</div>
-
-<div class="card">
-<div class="streak-icon">🔥</div>
-<p>Today's streak</p>
-<h2 id="todayStreak">0</h2>
-</div>
-
-<div class="card">
-<p>Best streak</p>
-<h2>0</h2>
-</div>
-
-<div class="card">
-<p>Completed tasks</p>
-<h2 id="completedCount">0</h2>
-</div>
-
-</div>
-
-
-<div class="task-input">
-
-<input id="taskText" placeholder="What must be done next?">
-
-<select id="taskType">
-<option value="non">Non-Negotiable</option>
-<option value="day">Task of the Day</option>
-<option value="overflow">Reschedule</option>
-</select>
-
-<button class="primary-btn" onclick="addTask()">+ Add Task</button>
-
-</div>
-
-
-
-<div class="board">
-
-<div class="column">
-<h3>Non-Negotiable</h3>
-<div id="non"></div>
-</div>
-
-<div class="column">
-<h3>Task of the Day</h3>
-<div id="day"></div>
-</div>
-
-<div class="column">
-<h3>Reschedule</h3>
-<div id="overflow"></div>
-</div>
-
-<div class="timer">
-
-<h3>Focus Timer</h3>
-
-<input class="timer-input" type="number" id="customMinutes" value="25">
-
-<button class="primary-btn" onclick="startTimer()">Start Focus</button>
-
-</div>
-
-</div>
-
-</section>
-
-
-
-<section id="journal" class="page hidden">
-
-<h2>Daily Journal</h2>
-
-<textarea class="journal-box" placeholder="Write your thoughts..."></textarea>
-
-<h3>Gratitude (3 things)</h3>
-
-<input class="gratitude-box" placeholder="Gratitude item 1">
-<input class="gratitude-box" placeholder="Gratitude item 2">
-<input class="gratitude-box" placeholder="Gratitude item 3">
-
-<button class="primary-btn">Save Journal</button>
-
-</section>
-
-
-
-<section id="reports" class="page hidden">
-
-<h2>Productivity Reports</h2>
-
-<div class="report-card">
-
-<p>
-This section will provide detailed productivity insights based on completed tasks
-and focus sessions.
-</p>
-
-<p>
-Weekly and monthly productivity analytics, focus statistics, and performance
-reports will be available here in future versions.
-</p>
-
-<p>
-This feature is currently under development.
-</p>
-
-</div>
-
-</section>
-
-
-
-<section id="ai" class="page hidden">
-
-<h2>AI Productivity Coach</h2>
-
-<div class="report-card">
-
-<p>
-The AI Coach will analyze your work patterns and task completion behaviour
-to provide smart productivity suggestions.
-</p>
-
-<p>
-It will help with task prioritization, focus improvement, and productivity
-planning.
-</p>
-
-<p>
-This feature is currently under development.
-</p>
-
-</div>
-
-</section>
-
-</div>
-
-
-
-<div id="focusScreen" class="focus-screen">
-
-<div class="focus-clock">
-<div id="focusTime" class="focus-time">25:00</div>
-</div>
-
-<button class="exit-focus" onclick="exitFocus()">Exit Focus</button>
-
-</div>
-
-
-</div>
-
-
-<script src="script.js"></script>
-
+    <div id="loader" class="loader-screen">
+        <div class="loader-core">
+            <div class="loader-ring"></div>
+            <div class="loader-ring r2"></div>
+            ⚡
+        </div>
+    </div>
+
+    <div class="ambient-universe">
+        <div class="stars"></div>
+        <div class="glowing-orb orb-1"></div>
+        <div class="glowing-orb orb-2"></div>
+    </div>
+
+    <div id="landingPage" class="landing-container hidden">
+        <div class="landing-content pop-out-3d">
+            <h1 class="glitch-text" data-text="KINETIC FLOW">KINETIC FLOW</h1>
+            <p>Master your tasks. Hack your productivity. Enter the flow state.</p>
+            <button class="glow-btn huge mt-4" onclick="goToLogin()">Initialize System</button>
+        </div>
+        <div class="wireframe-grid"></div>
+    </div>
+
+    <div id="loginPage" class="login-container hidden">
+        <div id="tiltCard" class="glass-card 3d-panel">
+            <div class="auth-tabs">
+                <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+                <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+            </div>
+
+            <div id="loginForm" class="auth-form active">
+                <h2>Welcome Back</h2>
+                <p class="subtitle">Access your kinetic workspace.</p>
+                <div class="input-group"><input id="loginUser" class="clean-input" placeholder="Username"></div>
+                <div class="input-group"><input id="loginPass" class="clean-input" type="password" placeholder="Password"></div>
+                <button class="glow-btn" onclick="login()">Ignite Focus</button>
+            </div>
+
+            <div id="signupForm" class="auth-form">
+                <h2>Join Kinetic</h2>
+                <p class="subtitle">Start your productivity journey today.</p>
+                <div class="input-group"><input id="signupUser" class="clean-input" placeholder="Choose a Username"></div>
+                <div class="input-group"><input id="signupPass" class="clean-input" type="password" placeholder="Create a Password"></div>
+                <button class="glow-btn" onclick="signup()">Create Account</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="appContent" class="hidden">
+        <header class="navbar glass-panel">
+            <div class="logo">⚡ Kinetic Focus</div>
+            <nav>
+                <a class="nav-link" onclick="showPage('dashboard')">Dashboard</a>
+                <a class="nav-link" onclick="showPage('profile')">Profile</a>
+                <a class="nav-link" onclick="showPage('journal')">Journal</a>
+                <a class="nav-link" onclick="showPage('reports')">Reports</a>
+                <a class="nav-link" onclick="showPage('ai')">AI Coach</a>
+            </nav>
+        </header>
+
+        <div class="container">
+            <section id="dashboard" class="page">
+                <div class="stats 3d-container">
+                    <div class="stat-card glass-panel hover-3d"><p>Active learners</p><h2>1</h2></div>
+                    <div class="stat-card glass-panel hover-3d"><div class="streak-icon">🔥</div><p>Today's streak</p><h2 id="todayStreak">0</h2></div>
+                    <div class="stat-card glass-panel hover-3d"><p>Best streak</p><h2 id="bestStreak">0</h2></div>
+                    <div class="stat-card glass-panel hover-3d"><p>Completed tasks</p><h2 id="completedCount">0</h2></div>
+                </div>
+
+                <div class="task-input-bar glass-panel hover-3d">
+                    <input id="taskText" class="clean-input" placeholder="What must be done next? (e.g. Study DSD, Complete project)">
+                    <select id="taskType" class="clean-input">
+                        <option value="non">Non-Negotiable</option>
+                        <option value="day">Task of the Day</option>
+                        <option value="overflow">Reschedule</option>
+                    </select>
+                    <button class="glow-btn small" onclick="addTask()">+ Add Task</button>
+                </div>
+
+                <div class="board">
+                    <div class="column glass-panel">
+                        <div class="col-header"><h3>Non-Negotiable</h3><span class="badge red">Priority</span></div>
+                        <div id="non" class="task-list"></div>
+                    </div>
+                    <div class="column glass-panel">
+                        <div class="col-header"><h3>Task of the Day</h3><span class="badge blue">Focus</span></div>
+                        <div id="day" class="task-list"></div>
+                    </div>
+                    <div class="column glass-panel">
+                        <div class="col-header"><h3>Reschedule</h3><span class="badge gray">Later</span></div>
+                        <div id="overflow" class="task-list"></div>
+                    </div>
+                    <div class="timer-panel glass-panel hover-3d">
+                        <h3>Deep Work</h3>
+                        <p class="subtitle mt-2">Set minutes</p>
+                        <input class="timer-input clean-input" type="number" id="customMinutes" value="25">
+                        <button class="glow-btn" onclick="startTimer()">Enter Flow State</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="profile" class="page hidden">
+                <div class="profile-layout">
+                    <div class="glass-panel text-center identity-panel hover-3d">
+                        <h2>Identity Core</h2>
+                        <div class="clean-avatar mt-4">
+                            <div class="avatar-ring"></div>
+                            <div class="avatar-ring r-reverse"></div>
+                            <div class="avatar-core"><span id="profileInitials">KF</span></div>
+                        </div>
+                        <p class="subtitle mt-4">Kinetic Pioneer</p>
+                    </div>
+
+                    <div class="glass-panel heatmap-container hover-3d">
+                        <div class="heatmap-header">
+                            <h2>Contribution Activity</h2>
+                            <div class="year-tabs">
+                                <button class="year-btn active" onclick="setHeatmapYear(2026)">2026</button>
+                                <button class="year-btn" onclick="setHeatmapYear(2025)">2025</button>
+                            </div>
+                        </div>
+                        <p class="subtitle"><span id="totalContribs">0</span> contributions in the selected year</p>
+                        
+                        <div class="heatmap-scroll-wrapper">
+                            <div id="heatmapGrid" class="heatmap-grid empty-state"></div>
+                        </div>
+                        
+                        <div class="heatmap-footer">
+                            <p class="subtitle legend-wrap">Less <span class="legend-box level-0"></span><span class="legend-box level-1"></span><span class="legend-box level-2"></span><span class="legend-box level-3"></span> More</p>
+                            <button class="outline-btn small" onclick="addSampleContribution()">Load Sample Data</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="journal" class="page hidden">
+                <div class="glass-panel max-w-900 mx-auto hover-3d">
+                    <h2>Daily Journal</h2>
+                    <textarea class="clean-input big mt-2 depth-inset" placeholder="Clear your mind... Write your thoughts here."></textarea>
+                    
+                    <h3 class="mt-4">Daily Gratitude</h3>
+                    <div class="gratitude-grid mt-2">
+                        <input class="clean-input depth-inset" placeholder="1. I am grateful for...">
+                        <input class="clean-input depth-inset" placeholder="2. I am grateful for...">
+                        <input class="clean-input depth-inset" placeholder="3. I am grateful for...">
+                    </div>
+                    <button class="glow-btn mt-4">Save Journal</button>
+                </div>
+            </section>
+
+            <section id="reports" class="page hidden">
+                <div class="glass-panel max-w-900 mx-auto hover-3d">
+                    <div class="flex-between">
+                        <h2>Productivity Analytics</h2>
+                        <div class="year-tabs">
+                            <button class="year-btn active" onclick="switchReport('week')">Weekly</button>
+                            <button class="year-btn" onclick="switchReport('month')">Monthly</button>
+                        </div>
+                    </div>
+                    <p class="subtitle" id="reportSubtitle">Overview of your flow states this week.</p>
+                    
+                    <div id="reportsContentArea">
+                        <div class="zero-data-state hidden" id="zeroDataMessage">
+                            <div class="empty-icon">📊</div>
+                            <h3>No Data Yet</h3>
+                            <p class="subtitle">Complete tasks to generate your productivity graphs.</p>
+                        </div>
+
+                        <div class="clean-chart" id="reportChart">
+                            <div class="chart-floor"></div>
+                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>M</span></div>
+                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>T</span></div>
+                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>W</span></div>
+                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>T</span></div>
+                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>F</span></div>
+                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>S</span></div>
+                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>S</span></div>
+                        </div>
+                    </div>
+
+                    <div class="ai-insight-box mt-4 depth-inset">
+                        <div class="insight-icon">✨</div>
+                        <div>
+                            <h4 class="text-primary">AI Insight</h4>
+                            <p id="reportInsight">Initialize your flow state. Complete your first task to activate analytics.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="ai" class="page hidden">
+                <div class="ai-layout max-w-900 mx-auto">
+                    <div class="glass-panel flex-center flex-col ai-visual-panel hover-3d">
+                        <div class="sleek-orb">
+                            <div class="orb-core"></div>
+                            <div class="orb-ring"></div>
+                            <div class="orb-ring r2"></div>
+                        </div>
+                        <h3 class="mt-4">Kinetic Neural Net</h3>
+                        <p class="subtitle text-center mt-2">Online and ready to assist with scheduling, programming concepts, and focus techniques.</p>
+                    </div>
+
+                    <div class="glass-panel chat-panel hover-3d">
+                        <div class="chat-header">
+                            <h3>Coach Chat</h3>
+                        </div>
+                        <div class="chat-history depth-inset" id="chatHistory">
+                            <div class="chat-msg bot">
+                                <div class="msg-bubble">System online. What are we studying or working on today?</div>
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="chatInput" class="clean-input" placeholder="e.g., How do I plan my exam prep?" onkeypress="handleChatEnter(event)">
+                            <button class="glow-btn small" onclick="sendChatMessage()">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="focusScreen" class="focus-screen">
+            <div class="hyper-space">
+                <div class="tunnel"></div>
+                <div class="tunnel t2"></div>
+                <div class="tunnel t3"></div>
+            </div>
+            
+            <div class="focus-content pop-out-3d">
+                <div class="hologram-timer">
+                    <div class="holo-scanline"></div>
+                    <div id="focusTime" class="focus-time text-glow">25:00</div>
+                    <p class="focus-label">DEEP WORK ACTIVE</p>
+                </div>
+                <button class="glow-btn huge mt-4" onclick="exitFocus()">Break Flow</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
