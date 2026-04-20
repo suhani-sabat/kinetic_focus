@@ -2,7 +2,7 @@
 
 **Kinetic Focus** is a productivity dashboard web application designed to help users organize tasks, maintain focus sessions, and build consistent work habits through streak tracking and structured task prioritization.
 
-🔗 **Live Demo:** https://kinetic-focus.netlify.app/
+🔗 **Live Demo:** https://kineticfocus.netlify.app/
 
 ---
 
