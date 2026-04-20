@@ -3,7 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kinetic Focus</title>
+
+    <!-- SEO Meta Tags -->
+    <title>Kinetic Focus — Master Your Productivity & Enter Flow State</title>
+    <meta name="description" content="Kinetic Focus is a premium productivity app for students and professionals. Manage tasks, track streaks, journal daily, and enter deep work flow state with AI coaching.">
+    <meta name="keywords" content="productivity app, task manager, focus timer, pomodoro, study tracker, habit tracker, AI coach, deep work, flow state, kinetic focus">
+    <meta name="author" content="Kinetic Focus">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#9d4edd">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Kinetic Focus — Master Your Productivity">
+    <meta property="og:description" content="Track tasks, build streaks, journal daily, and use AI coaching to enter your flow state.">
+    <meta property="og:url" content="https://kinetic-focus.app">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Kinetic Focus — Master Your Productivity">
+    <meta name="twitter:description" content="Track tasks, build streaks, journal daily, and use AI coaching to enter your flow state.">
+
+    <link rel="canonical" href="https://kinetic-focus.app">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -18,23 +38,28 @@
         </div>
     </div>
 
-    <div class="ambient-universe">
-        <div class="stars"></div>
+    <!-- ANIMATED BACKGROUND -->
+    <div class="ambient-universe" aria-hidden="true">
+        <canvas id="bgCanvas" class="bg-canvas"></canvas>
         <div class="glowing-orb orb-1"></div>
         <div class="glowing-orb orb-2"></div>
+        <div class="glowing-orb orb-3"></div>
     </div>
 
+    <!-- LANDING -->
     <div id="landingPage" class="landing-container hidden">
         <div class="landing-content pop-out-3d">
+            <div class="landing-badge">✦ Productivity Redefined</div>
             <h1 class="glitch-text" data-text="KINETIC FLOW">KINETIC FLOW</h1>
             <p>Master your tasks. Hack your productivity. Enter the flow state.</p>
             <button class="glow-btn huge mt-4" onclick="goToLogin()">Initialize System</button>
         </div>
-        <div class="wireframe-grid"></div>
+        <div class="wireframe-grid" aria-hidden="true"></div>
     </div>
 
+    <!-- LOGIN -->
     <div id="loginPage" class="login-container hidden">
-        <div id="tiltCard" class="glass-card 3d-panel">
+        <div id="tiltCard" class="glass-card">
             <div class="auth-tabs">
                 <button class="tab-btn active" onclick="switchTab('login')">Login</button>
                 <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
@@ -43,21 +68,36 @@
             <div id="loginForm" class="auth-form active">
                 <h2>Welcome Back</h2>
                 <p class="subtitle">Access your kinetic workspace.</p>
-                <div class="input-group"><input id="loginUser" class="clean-input" placeholder="Username"></div>
-                <div class="input-group"><input id="loginPass" class="clean-input" type="password" placeholder="Password"></div>
+                <div class="input-group">
+                    <input id="loginUser" class="clean-input glass-input" placeholder="Username" autocomplete="username">
+                </div>
+                <div class="input-group password-group">
+                    <input id="loginPass" class="clean-input glass-input" type="password" placeholder="Password" autocomplete="current-password">
+                    <button class="eye-btn" onclick="togglePass('loginPass', this)" type="button">
+                        <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
                 <button class="glow-btn" onclick="login()">Ignite Focus</button>
             </div>
 
             <div id="signupForm" class="auth-form">
                 <h2>Join Kinetic</h2>
                 <p class="subtitle">Start your productivity journey today.</p>
-                <div class="input-group"><input id="signupUser" class="clean-input" placeholder="Choose a Username"></div>
-                <div class="input-group"><input id="signupPass" class="clean-input" type="password" placeholder="Create a Password"></div>
+                <div class="input-group">
+                    <input id="signupUser" class="clean-input glass-input" placeholder="Choose a Username" autocomplete="username">
+                </div>
+                <div class="input-group password-group">
+                    <input id="signupPass" class="clean-input glass-input" type="password" placeholder="Create a Password" autocomplete="new-password">
+                    <button class="eye-btn" onclick="togglePass('signupPass', this)" type="button">
+                        <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
                 <button class="glow-btn" onclick="signup()">Create Account</button>
             </div>
         </div>
     </div>
 
+    <!-- APP -->
     <div id="appContent" class="hidden">
         <header class="navbar glass-panel">
             <div class="logo">⚡ Kinetic Focus</div>
@@ -71,10 +111,20 @@
         </header>
 
         <div class="container">
+            <!-- DASHBOARD -->
             <section id="dashboard" class="page">
-                <div class="stats 3d-container">
+                <div class="stats">
                     <div class="stat-card glass-panel hover-3d"><p>Active learners</p><h2>1</h2></div>
-                    <div class="stat-card glass-panel hover-3d"><div class="streak-icon">🔥</div><p>Today's streak</p><h2 id="todayStreak">0</h2></div>
+                    <div class="stat-card glass-panel hover-3d streak-card">
+                        <p>Today's streak</p>
+                        <div class="streak-display">
+                            <div class="fire-wrap">
+                                <span class="fire-emoji">🔥</span>
+                                <div class="fire-glow"></div>
+                            </div>
+                            <h2 id="todayStreak">0</h2>
+                        </div>
+                    </div>
                     <div class="stat-card glass-panel hover-3d"><p>Best streak</p><h2 id="bestStreak">0</h2></div>
                     <div class="stat-card glass-panel hover-3d"><p>Completed tasks</p><h2 id="completedCount">0</h2></div>
                 </div>
@@ -111,45 +161,83 @@
                 </div>
             </section>
 
+            <!-- PROFILE -->
             <section id="profile" class="page hidden">
-                <div class="profile-layout">
-                    <div class="glass-panel text-center identity-panel hover-3d">
-                        <h2>Identity Core</h2>
-                        <div class="clean-avatar mt-4">
+                <div class="profile-top-bar glass-panel hover-3d">
+                    <div class="profile-identity">
+                        <div class="clean-avatar">
                             <div class="avatar-ring"></div>
                             <div class="avatar-ring r-reverse"></div>
                             <div class="avatar-core"><span id="profileInitials">KF</span></div>
                         </div>
-                        <p class="subtitle mt-4">Kinetic Pioneer</p>
-                    </div>
-
-                    <div class="glass-panel heatmap-container hover-3d">
-                        <div class="heatmap-header">
-                            <h2>Contribution Activity</h2>
-                            <div class="year-tabs">
-                                <button class="year-btn active" onclick="setHeatmapYear(2026)">2026</button>
-                                <button class="year-btn" onclick="setHeatmapYear(2025)">2025</button>
+                        <div class="profile-info">
+                            <h2 id="profileUsername">Kinetic User</h2>
+                            <p class="subtitle">Kinetic Pioneer</p>
+                            <div class="profile-badges-row">
+                                <span class="badge red">Focused</span>
+                                <span class="badge blue">Consistent</span>
                             </div>
                         </div>
-                        <p class="subtitle"><span id="totalContribs">0</span> contributions in the selected year</p>
-                        
-                        <div class="heatmap-scroll-wrapper">
-                            <div id="heatmapGrid" class="heatmap-grid empty-state"></div>
+                    </div>
+                    <div class="profile-quick-stats">
+                        <div class="quick-stat">
+                            <h3 id="profileCompleted">0</h3>
+                            <p>Tasks Done</p>
                         </div>
-                        
-                        <div class="heatmap-footer">
-                            <p class="subtitle legend-wrap">Less <span class="legend-box level-0"></span><span class="legend-box level-1"></span><span class="legend-box level-2"></span><span class="legend-box level-3"></span> More</p>
-                            <button class="outline-btn small" onclick="addSampleContribution()">Load Sample Data</button>
+                        <div class="quick-stat-divider"></div>
+                        <div class="quick-stat">
+                            <h3 id="profileStreak">0</h3>
+                            <p>Current Streak</p>
                         </div>
+                        <div class="quick-stat-divider"></div>
+                        <div class="quick-stat">
+                            <h3 id="profileBest">0</h3>
+                            <p>Best Streak</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="heatmap-full-panel glass-panel hover-3d">
+                    <div class="heatmap-header">
+                        <div>
+                            <h2><span id="totalContribs">0</span> submissions in the past one year</h2>
+                            <p class="subtitle mt-1" id="heatmapActiveDays">Total active days: 0 &nbsp;|&nbsp; Max streak: 0</p>
+                        </div>
+                        <div class="year-tabs">
+                            <button class="year-btn active" onclick="setHeatmapYear(2026, event)">2026</button>
+                            <button class="year-btn" onclick="setHeatmapYear(2025, event)">2025</button>
+                        </div>
+                    </div>
+
+                    <div class="heatmap-scroll-wrapper">
+                        <div class="heatmap-inner">
+                            <div class="heatmap-day-labels">
+                                <span></span>
+                                <span>Mon</span>
+                                <span></span>
+                                <span>Wed</span>
+                                <span></span>
+                                <span>Fri</span>
+                                <span></span>
+                            </div>
+                            <div class="heatmap-right">
+                                <div class="heatmap-month-labels" id="heatmapMonthLabels"></div>
+                                <div id="heatmapGrid" class="heatmap-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="heatmap-footer">
+                        <p class="subtitle legend-wrap">Less <span class="legend-box level-0"></span><span class="legend-box level-1"></span><span class="legend-box level-2"></span><span class="legend-box level-3"></span> More</p>
                     </div>
                 </div>
             </section>
 
+            <!-- JOURNAL -->
             <section id="journal" class="page hidden">
                 <div class="glass-panel max-w-900 mx-auto hover-3d">
                     <h2>Daily Journal</h2>
                     <textarea class="clean-input big mt-2 depth-inset" placeholder="Clear your mind... Write your thoughts here."></textarea>
-                    
                     <h3 class="mt-4">Daily Gratitude</h3>
                     <div class="gratitude-grid mt-2">
                         <input class="clean-input depth-inset" placeholder="1. I am grateful for...">
@@ -160,6 +248,7 @@
                 </div>
             </section>
 
+            <!-- REPORTS -->
             <section id="reports" class="page hidden">
                 <div class="glass-panel max-w-900 mx-auto hover-3d">
                     <div class="flex-between">
@@ -170,26 +259,23 @@
                         </div>
                     </div>
                     <p class="subtitle" id="reportSubtitle">Overview of your flow states this week.</p>
-                    
                     <div id="reportsContentArea">
                         <div class="zero-data-state hidden" id="zeroDataMessage">
                             <div class="empty-icon">📊</div>
                             <h3>No Data Yet</h3>
                             <p class="subtitle">Complete tasks to generate your productivity graphs.</p>
                         </div>
-
                         <div class="clean-chart" id="reportChart">
                             <div class="chart-floor"></div>
-                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>M</span></div>
-                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>T</span></div>
-                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>W</span></div>
-                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>T</span></div>
-                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>F</span></div>
-                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>S</span></div>
-                            <div class="bar-col"><div class="bar" style="height: 0%;"></div><span>S</span></div>
+                            <div class="bar-col"><div class="bar" style="height:0%"></div><span>M</span></div>
+                            <div class="bar-col"><div class="bar" style="height:0%"></div><span>T</span></div>
+                            <div class="bar-col"><div class="bar" style="height:0%"></div><span>W</span></div>
+                            <div class="bar-col"><div class="bar" style="height:0%"></div><span>T</span></div>
+                            <div class="bar-col"><div class="bar" style="height:0%"></div><span>F</span></div>
+                            <div class="bar-col"><div class="bar" style="height:0%"></div><span>S</span></div>
+                            <div class="bar-col"><div class="bar" style="height:0%"></div><span>S</span></div>
                         </div>
                     </div>
-
                     <div class="ai-insight-box mt-4 depth-inset">
                         <div class="insight-icon">✨</div>
                         <div>
@@ -200,6 +286,7 @@
                 </div>
             </section>
 
+            <!-- AI COACH -->
             <section id="ai" class="page hidden">
                 <div class="ai-layout max-w-900 mx-auto">
                     <div class="glass-panel flex-center flex-col ai-visual-panel hover-3d">
@@ -209,16 +296,16 @@
                             <div class="orb-ring r2"></div>
                         </div>
                         <h3 class="mt-4">Kinetic Neural Net</h3>
-                        <p class="subtitle text-center mt-2">Online and ready to assist with scheduling, programming concepts, and focus techniques.</p>
+                        <p class="subtitle text-center mt-2">Powered by Claude AI. Ask anything about productivity, studying, or coding.</p>
                     </div>
-
                     <div class="glass-panel chat-panel hover-3d">
                         <div class="chat-header">
                             <h3>Coach Chat</h3>
+                            <span class="ai-status-dot"></span>
                         </div>
                         <div class="chat-history depth-inset" id="chatHistory">
                             <div class="chat-msg bot">
-                                <div class="msg-bubble">System online. What are we studying or working on today?</div>
+                                <div class="msg-bubble">System online. I'm your AI coach powered by Claude. What are we studying or working on today?</div>
                             </div>
                         </div>
                         <div class="chat-input-area">
@@ -230,13 +317,13 @@
             </section>
         </div>
 
+        <!-- FOCUS SCREEN -->
         <div id="focusScreen" class="focus-screen">
             <div class="hyper-space">
                 <div class="tunnel"></div>
                 <div class="tunnel t2"></div>
                 <div class="tunnel t3"></div>
             </div>
-            
             <div class="focus-content pop-out-3d">
                 <div class="hologram-timer">
                     <div class="holo-scanline"></div>

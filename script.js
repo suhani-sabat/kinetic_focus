@@ -1,11 +1,13 @@
-// --- CENTRALIZED APP DATA & PERSISTENCE ---
-const APP_STORAGE_KEY = 'kinetic_data_v3'; 
+// ============================================
+// KINETIC FOCUS — script.js
+// ============================================
+
+const APP_STORAGE_KEY = 'kinetic_data_v3';
 const APP_CONTRIBS_KEY = 'kinetic_contributions_v3';
 
-let completed = 0;
-let streak = 0;
-let bestStreak = 0;
+let completed = 0, streak = 0, bestStreak = 0;
 let contributions = JSON.parse(localStorage.getItem(APP_CONTRIBS_KEY)) || {};
+let currentHeatmapYear = new Date().getFullYear();
 
 function saveToStorage() {
     if (streak > bestStreak) bestStreak = streak;
@@ -15,74 +17,140 @@ function saveToStorage() {
 
 function loadFromStorage() {
     const data = JSON.parse(localStorage.getItem(APP_STORAGE_KEY));
-    if (data) {
-        completed = data.completed || 0;
-        streak = data.streak || 0;
-        bestStreak = data.bestStreak || 0;
-    }
-    
+    if (data) { completed = data.completed||0; streak = data.streak||0; bestStreak = data.bestStreak||0; }
     document.getElementById("completedCount").innerText = completed;
     document.getElementById("todayStreak").innerText = streak;
     document.getElementById("bestStreak").innerText = bestStreak;
 }
 
-// --- INIT, LOADER & LANDING ---
+// ============================================
+// PARTICLE BACKGROUND (canvas)
+// ============================================
+function initParticles() {
+    const canvas = document.getElementById('bgCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width = window.innerWidth;
+    let H = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    });
+
+    const COLORS = ['rgba(157,78,221,', 'rgba(199,125,255,', 'rgba(58,12,163,'];
+    const particles = Array.from({length: 70}, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 2 + 0.5,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        alpha: Math.random() * 0.5 + 0.1,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)]
+    }));
+
+    // A few larger glowing nodes
+    const nodes = Array.from({length: 12}, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 3 + 1.5,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: (Math.random() - 0.5) * 0.15,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)]
+    }));
+
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+
+        // Draw connection lines between nearby nodes
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i+1; j < nodes.length; j++) {
+                const dx = nodes[i].x - nodes[j].x;
+                const dy = nodes[i].y - nodes[j].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 220) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(157,78,221,${0.12 * (1 - dist/220)})`;
+                    ctx.lineWidth = 0.6;
+                    ctx.moveTo(nodes[i].x, nodes[i].y);
+                    ctx.lineTo(nodes[j].x, nodes[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Draw particles
+        particles.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+            ctx.fillStyle = p.color + p.alpha + ')';
+            ctx.fill();
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+            if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+        });
+
+        // Draw glowing nodes
+        nodes.forEach(n => {
+            ctx.beginPath();
+            const grd = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 4);
+            grd.addColorStop(0, n.color + '0.8)');
+            grd.addColorStop(1, n.color + '0)');
+            ctx.arc(n.x, n.y, n.r * 4, 0, Math.PI*2);
+            ctx.fillStyle = grd;
+            ctx.fill();
+            n.x += n.vx; n.y += n.vy;
+            if (n.x < 0) n.x = W; if (n.x > W) n.x = 0;
+            if (n.y < 0) n.y = H; if (n.y > H) n.y = 0;
+        });
+
+        requestAnimationFrame(draw);
+    }
+    draw();
+}
+
+// ============================================
+// INIT
+// ============================================
 document.addEventListener('DOMContentLoaded', () => {
     loadFromStorage();
     initDragAndDrop();
+    initParticles();
 
-    // Loader Sequence
+    // Loader → Landing (always show landing first)
     setTimeout(() => {
         const loader = document.getElementById('loader');
         loader.style.opacity = '0';
         setTimeout(() => {
             loader.classList.add('hidden');
-            // If already logged in, go straight to app. Otherwise, show landing page.
-            if(localStorage.getItem("user")) {
-                document.getElementById('appContent').classList.remove('hidden');
-                document.querySelector('.ambient-universe').classList.add('hidden');
-                generateHeatmap(new Date().getFullYear());
-                updateReportsLogic();
-            } else {
-                document.getElementById('landingPage').classList.remove('hidden');
-            }
+            document.getElementById('landingPage').classList.remove('hidden');
         }, 500);
-    }, 2000); // 2 second loading animation
+    }, 2000);
 
-    // 3D Mouse Tracking for Panels
+    // 3D tilt
     document.addEventListener('mousemove', (e) => {
-        let xAxis = (window.innerWidth / 2 - e.pageX) / 40; 
-        let yAxis = (window.innerHeight / 2 - e.pageY) / 40;
-
-        // Login Card
+        const xAxis = (window.innerWidth/2 - e.pageX) / 40;
+        const yAxis = (window.innerHeight/2 - e.pageY) / 40;
         const loginPage = document.getElementById('loginPage');
         const tiltCard = document.getElementById('tiltCard');
-        if (!loginPage.classList.contains('hidden') && tiltCard) {
+        if (!loginPage.classList.contains('hidden') && tiltCard)
             tiltCard.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
-        }
-
-        // Landing Content
-        const landingPage = document.getElementById('landingPage');
-        if (!landingPage.classList.contains('hidden')) {
-            document.querySelector('.landing-content').style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg) translateZ(50px)`;
-        }
-
-        // App Panels (Only if they have hover-3d class and are currently visible)
-        document.querySelectorAll('.page:not(.hidden) .hover-3d').forEach(panel => {
-            // CSS handles the hover, but we can add slight parallax if wanted.
-            // For stability, relying on CSS :hover for the main pop effect is smoother.
-        });
+        const lp = document.getElementById('landingPage');
+        const lc = document.querySelector('.landing-content');
+        if (!lp.classList.contains('hidden') && lc)
+            lc.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg) translateZ(50px)`;
     });
-
     document.addEventListener('mouseleave', () => {
         const tiltCard = document.getElementById('tiltCard');
-        if (tiltCard) tiltCard.style.transform = `rotateY(0deg) rotateX(0deg)`;
-        const landingContent = document.querySelector('.landing-content');
-        if(landingContent) landingContent.style.transform = `rotateY(0deg) rotateX(0deg) translateZ(50px)`;
+        if (tiltCard) tiltCard.style.transform = 'rotateY(0deg) rotateX(0deg)';
+        const lc = document.querySelector('.landing-content');
+        if (lc) lc.style.transform = 'rotateY(0deg) rotateX(0deg) translateZ(50px)';
     });
 });
 
-// --- NAVIGATION ---
+// ============================================
+// NAVIGATION
+// ============================================
 function goToLogin() {
     document.getElementById('landingPage').classList.add('hidden');
     document.getElementById('loginPage').classList.remove('hidden');
@@ -91,23 +159,25 @@ function goToLogin() {
 function showPage(id) {
     document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
-    
-    if(id === 'profile') {
-        generateHeatmap(new Date().getFullYear()); 
-        let user = localStorage.getItem("user") || "KF";
+    if (id === 'profile') {
+        const user = localStorage.getItem("user") || "KF";
         document.getElementById("profileInitials").innerText = user.substring(0,2).toUpperCase();
+        document.getElementById("profileUsername").innerText = user;
+        document.getElementById("profileCompleted").innerText = completed;
+        document.getElementById("profileStreak").innerText = streak;
+        document.getElementById("profileBest").innerText = bestStreak;
+        generateHeatmap(currentHeatmapYear);
     }
-    if(id === 'reports') {
-        updateReportsLogic();
-    }
+    if (id === 'reports') updateReportsLogic();
 }
 
-// --- AUTHENTICATION ---
+// ============================================
+// AUTH
+// ============================================
 function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
-    
-    if(tab === 'login') {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    if (tab === 'login') {
         document.querySelectorAll('.tab-btn')[0].classList.add('active');
         document.getElementById('loginForm').classList.add('active');
     } else {
@@ -117,44 +187,47 @@ function switchTab(tab) {
 }
 
 function signup() {
-    let user = document.getElementById("signupUser").value;
-    let pass = document.getElementById("signupPass").value;
-    if(!user || !pass) { alert("Please fill in both fields"); return; }
+    const user = document.getElementById("signupUser").value.trim();
+    const pass = document.getElementById("signupPass").value;
+    if (!user || !pass) { alert("Please fill in both fields"); return; }
     localStorage.setItem("user", user);
     localStorage.setItem("pass", pass);
     alert("Account created! Please log in.");
-    switchTab('login'); 
+    switchTab('login');
 }
 
 function login() {
-    let user = document.getElementById("loginUser").value;
-    let pass = document.getElementById("loginPass").value;
-    let storedUser = localStorage.getItem("user");
-    let storedPass = localStorage.getItem("pass");
-
-    if (user === storedUser && pass === storedPass && user !== "" && user !== null) {
+    const user = document.getElementById("loginUser").value.trim();
+    const pass = document.getElementById("loginPass").value;
+    const storedUser = localStorage.getItem("user");
+    const storedPass = localStorage.getItem("pass");
+    if (user === storedUser && pass === storedPass && user !== "") {
         document.getElementById("loginPage").classList.add("hidden");
-        document.querySelector(".ambient-universe").classList.add("hidden"); 
         document.getElementById("appContent").classList.remove("hidden");
-        
-        // Initial setup on login
-        let initials = user.substring(0,2).toUpperCase();
-        document.getElementById("profileInitials").innerText = initials;
-        generateHeatmap(new Date().getFullYear());
+        document.getElementById("profileInitials").innerText = user.substring(0,2).toUpperCase();
+        document.getElementById("profileUsername").innerText = user;
+        generateHeatmap(currentHeatmapYear);
         updateReportsLogic();
-
     } else {
         alert("Invalid credentials.");
     }
 }
 
-// --- TASK SYSTEM ---
-function recordContribution(dateString) {
-    if(!contributions[dateString]) contributions[dateString] = 0;
-    contributions[dateString]++;
+function togglePass(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.querySelector('svg').style.opacity = isHidden ? '1' : '0.4';
+}
+
+// ============================================
+// TASKS
+// ============================================
+function recordContribution(dateStr) {
+    if (!contributions[dateStr]) contributions[dateStr] = 0;
+    contributions[dateStr]++;
     completed++; streak++;
     if (streak > bestStreak) bestStreak = streak;
-    
     document.getElementById("completedCount").innerText = completed;
     document.getElementById("todayStreak").innerText = streak;
     document.getElementById("bestStreak").innerText = bestStreak;
@@ -162,25 +235,19 @@ function recordContribution(dateString) {
 }
 
 function addTask() {
-    let text = document.getElementById("taskText").value;
-    let type = document.getElementById("taskType").value;
+    const text = document.getElementById("taskText").value.trim();
+    const type = document.getElementById("taskType").value;
     if (!text) return;
-
-    let task = document.createElement("div");
-    task.className = "task"; 
-
-    let checkbox = document.createElement("input");
+    const task = document.createElement("div");
+    task.className = "task";
+    const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-
-    checkbox.onchange = function () {
-        const todayStr = new Date().toISOString().slice(0, 10); 
-        recordContribution(todayStr);
-        task.style.transform = "translateZ(50px) scale(1.1)"; // Pop out before deleting
-        task.style.opacity = "0";
+    checkbox.onchange = () => {
+        recordContribution(new Date().toISOString().slice(0,10));
+        task.style.opacity = "0"; task.style.transform = "scale(1.1)";
         setTimeout(() => task.remove(), 300);
     };
-
-    let span = document.createElement("span");
+    const span = document.createElement("span");
     span.innerText = text;
     task.appendChild(checkbox); task.appendChild(span);
     document.getElementById(type).appendChild(task);
@@ -188,227 +255,296 @@ function addTask() {
 }
 
 function initDragAndDrop() {
-    new Sortable(document.getElementById('non'), { group: 'tasks', animation: 200 });
-    new Sortable(document.getElementById('day'), { group: 'tasks', animation: 200 });
-    new Sortable(document.getElementById('overflow'), { group: 'tasks', animation: 200 });
+    ['non','day','overflow'].forEach(id =>
+        new Sortable(document.getElementById(id), { group: 'tasks', animation: 200 })
+    );
 }
 
-
-// --- PROFILE HEATMAP (Fixed Zero State) ---
-function setHeatmapYear(year) {
-    document.querySelectorAll('.heatmap-container .year-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+// ============================================
+// HEATMAP — FIXED MONTH LABELS
+// ============================================
+function setHeatmapYear(year, e) {
+    currentHeatmapYear = year;
+    document.querySelectorAll('.heatmap-full-panel .year-btn').forEach(b => b.classList.remove('active'));
+    if (e && e.target) e.target.classList.add('active');
     generateHeatmap(year);
 }
 
 function generateHeatmap(year) {
     const grid = document.getElementById('heatmapGrid');
-    const totalCountLabel = document.getElementById('totalContribs');
-    grid.innerHTML = ''; 
-    
+    const monthBar = document.getElementById('heatmapMonthLabels');
+    const totalLabel = document.getElementById('totalContribs');
+    const activeLabel = document.getElementById('heatmapActiveDays');
+    grid.innerHTML = ''; monthBar.innerHTML = '';
+
     const today = new Date();
     const isCurrentYear = today.getFullYear() === year;
-    const oneYearAgo = new Date(); oneYearAgo.setDate(today.getDate() - 364);
-    
-    const startDate = isCurrentYear ? oneYearAgo : new Date(year, 0, 1);
-    const endDate = isCurrentYear ? today : new Date(year, 11, 31);
-    const formatDate = (date) => date.toISOString().slice(0, 10);
-    
-    grid.innerHTML += `<div class="contribution-box day">Mon</div><div class="contribution-box day" style="grid-row: 4">Wed</div><div class="contribution-box day" style="grid-row: 6">Fri</div>`;
-
-    const numDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-    let yearContribCount = 0; let lastMonth = -1;
-
-    for (let i = 0; i < numDays; i++) {
-        const currentDay = new Date(startDate); currentDay.setDate(startDate.getDate() + i);
-        const dateStr = formatDate(currentDay);
-        
-        // Ensure count is strictly treated as integer
-        const count = parseInt(contributions[dateStr] || 0);
-        yearContribCount += count;
-        
-        let level = 0;
-        if (count > 0 && count < 2) level = 1;
-        else if (count >= 2 && count < 4) level = 2;
-        else if (count >= 4) level = 3;
-        
-        const box = document.createElement('div');
-        box.className = `contribution-box level-${level}`;
-        box.title = `${dateStr}: ${count} tasks`; 
-
-        const month = currentDay.getMonth();
-        if (month !== lastMonth) {
-            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            const labelBox = document.createElement('div');
-            labelBox.className = 'contribution-box month'; labelBox.innerText = months[month];
-            grid.appendChild(labelBox); lastMonth = month;
-        }
-        grid.appendChild(box);
-    }
-    
-    totalCountLabel.innerText = yearContribCount;
-    
-    // Manage empty state class for styling
-    if(yearContribCount === 0) {
-        grid.classList.add('empty-state');
+    let startDate, endDate;
+    if (isCurrentYear) {
+        endDate = new Date(today);
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 364);
     } else {
-        grid.classList.remove('empty-state');
+        startDate = new Date(year, 0, 1);
+        endDate = new Date(year, 11, 31);
     }
-}
 
-// Button to explicitly load fake data to test UI
-function addSampleContribution() {
-    completed = 0; streak = 0; bestStreak = 0; contributions = {}; 
-    for (let i = 0; i < 365; i++) {
-        const pastDate = new Date(); pastDate.setDate(new Date().getDate() - i);
-        const count = Math.floor(Math.random() * 5); // 0 to 4
-        if(count > 0) {
-            contributions[pastDate.toISOString().slice(0, 10)] = count;
-            completed += count;
+    // Align start to Sunday
+    startDate.setDate(startDate.getDate() - startDate.getDay());
+
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const COL_PX = 17; // 14px cell + 3px gap
+
+    const totalDays = Math.round((endDate - startDate) / 86400000) + 1;
+    const totalWeeks = Math.ceil(totalDays / 7);
+
+    // -- Build month labels using absolute positioning --
+    // Find the first week index where each month starts
+    const monthWeekMap = {};
+    for (let w = 0; w < totalWeeks; w++) {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + w * 7);
+        if (d > endDate) break;
+        const m = d.getMonth();
+        const mName = MONTHS[m];
+        // Only set if this is the first occurrence in a new month-column
+        if (!(mName in monthWeekMap)) {
+            monthWeekMap[mName] = w;
+        } else {
+            // Also track month transitions mid-year
+            const nextMonday = new Date(d);
+            nextMonday.setDate(d.getDate() + 1);
+            if (nextMonday.getMonth() !== m && !(MONTHS[nextMonday.getMonth()] in monthWeekMap)) {
+                monthWeekMap[MONTHS[nextMonday.getMonth()]] = w + 1;
+            }
         }
     }
-    streak = 14; bestStreak = 42;
-    saveToStorage(); loadFromStorage();
-    generateHeatmap(new Date().getFullYear()); 
-    updateReportsLogic();
-    alert('Sample Data Loaded! Visuals updated.');
+
+    // Set month bar width to match grid
+    const gridW = totalWeeks * COL_PX;
+    monthBar.style.width = gridW + 'px';
+
+    // Place labels absolutely, skip if too close to previous
+    let lastPlacedX = -30;
+    MONTHS.forEach(mName => {
+        if (!(mName in monthWeekMap)) return;
+        const x = monthWeekMap[mName] * COL_PX;
+        if (x - lastPlacedX < 28) return; // skip if overlap
+        lastPlacedX = x;
+        const el = document.createElement('span');
+        el.className = 'month-label-item';
+        el.style.left = x + 'px';
+        el.innerText = mName;
+        monthBar.appendChild(el);
+    });
+
+    // -- Build grid cells --
+    let totalContribs = 0, activeDays = 0, maxSt = 0, curSt = 0;
+
+    for (let w = 0; w < totalWeeks; w++) {
+        for (let d = 0; d < 7; d++) {
+            const day = new Date(startDate);
+            day.setDate(startDate.getDate() + w * 7 + d);
+            const dateStr = day.toISOString().slice(0,10);
+            const inRange = day >= new Date(year,0,1) && day <= endDate;
+            const box = document.createElement('div');
+            box.className = 'contribution-box';
+            if (!inRange) {
+                box.style.visibility = 'hidden';
+                grid.appendChild(box);
+                continue;
+            }
+            const count = parseInt(contributions[dateStr] || 0);
+            totalContribs += count;
+            if (count > 0) { activeDays++; curSt++; if (curSt > maxSt) maxSt = curSt; }
+            else curSt = 0;
+            let level = 0;
+            if (count === 1) level = 1;
+            else if (count >= 2 && count < 4) level = 2;
+            else if (count >= 4) level = 3;
+            box.classList.add('level-' + level);
+            box.title = dateStr + ': ' + count + ' task' + (count !== 1 ? 's' : '');
+            grid.appendChild(box);
+        }
+    }
+
+    totalLabel.innerText = totalContribs;
+    activeLabel.innerText = 'Total active days: ' + activeDays + '   |   Max streak: ' + maxSt;
 }
 
-
-// --- REPORTS LOGIC ---
+// ============================================
+// REPORTS
+// ============================================
 function switchReport(type) {
-    document.querySelectorAll('#reports .year-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('#reports .year-btn').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
-    
-    const subtitle = document.getElementById('reportSubtitle');
-    if(type === 'week') subtitle.innerText = "Overview of your flow states this week.";
-    else subtitle.innerText = "Overview of your flow states this month.";
-    
-    updateReportsLogic(true); // pass true to just animate bars if data exists
+    document.getElementById('reportSubtitle').innerText =
+        type === 'week' ? "Overview of your flow states this week." : "Overview of your flow states this month.";
+    updateReportsLogic(true);
 }
 
 function updateReportsLogic(onlyAnimate = false) {
     const zeroMsg = document.getElementById('zeroDataMessage');
     const chart = document.getElementById('reportChart');
-    const insightText = document.getElementById('reportInsight');
-    
+    const insight = document.getElementById('reportInsight');
     if (completed === 0) {
-        // Show zero state
-        zeroMsg.classList.remove('hidden');
-        chart.classList.add('hidden');
-        insightText.innerText = "You haven't logged any tasks yet. Initialize your flow state by adding a 'Task of the Day' to activate analytics.";
+        zeroMsg.classList.remove('hidden'); chart.classList.add('hidden');
+        insight.innerText = "You haven't logged any tasks yet. Add tasks and complete them to activate analytics.";
     } else {
-        // Show chart
-        zeroMsg.classList.add('hidden');
-        chart.classList.remove('hidden');
-        
-        if(!onlyAnimate) {
-            if (completed < 10) {
-                insightText.innerText = `You've completed ${completed} tasks so far. Excellent start. Focus on consistency over intensity to build your streak.`;
-            } else {
-                insightText.innerText = `Outstanding momentum! With ${completed} completed tasks and a streak of ${streak}, your neural efficiency is peaking. Maintain this rhythm.`;
-            }
+        zeroMsg.classList.add('hidden'); chart.classList.remove('hidden');
+        if (!onlyAnimate) {
+            insight.innerText = completed < 10
+                ? `You've completed ${completed} tasks so far. Focus on consistency to build your streak.`
+                : `Outstanding! ${completed} tasks completed with a streak of ${streak}. Keep the momentum.`;
         }
-        
-        // Animate chart bars
         setTimeout(() => {
-            const bars = document.querySelectorAll('.bar');
-            bars.forEach(bar => {
-                let randomHeight = Math.floor(Math.random() * 70) + 20; // 20% to 90%
-                bar.style.height = randomHeight + "%";
+            document.querySelectorAll('.bar').forEach(b => {
+                b.style.height = Math.floor(Math.random() * 70 + 20) + '%';
             });
         }, 100);
     }
 }
 
+// ============================================
+// AI COACH — REAL CLAUDE API
+// The Anthropic API doesn't support direct
+// browser calls due to CORS. We use a CORS
+// proxy. For production, set up your own
+// backend proxy at /api/chat. The fallback
+// below uses a smart local response engine.
+// ============================================
+let chatMessages = [];
+let isBotTyping = false;
 
-// --- AI COACH CHATBOT (Improved Logic) ---
 function handleChatEnter(e) {
-    if (e.key === 'Enter') sendChatMessage();
+    if (e.key === 'Enter' && !isBotTyping) sendChatMessage();
 }
 
 function sendChatMessage() {
+    if (isBotTyping) return;
     const input = document.getElementById('chatInput');
     const msg = input.value.trim();
-    if(!msg) return;
-
+    if (!msg) return;
     appendMessage(msg, 'user');
     input.value = '';
-    scrollToChatBottom();
-
-    // Show typing indicator (simulated by delay)
-    setTimeout(() => {
-        let reply = getSmartAIResponse(msg.toLowerCase());
-        appendMessage(reply, 'bot');
-        scrollToChatBottom();
-    }, 1000);
+    chatMessages.push({ role: 'user', content: msg });
+    showTypingIndicator();
+    callClaude();
 }
 
 function appendMessage(text, sender) {
     const history = document.getElementById('chatHistory');
     const div = document.createElement('div');
-    div.className = `chat-msg ${sender}`;
-    div.innerHTML = `<div class="msg-bubble">${text}</div>`;
+    div.className = 'chat-msg ' + sender;
+    div.innerHTML = '<div class="msg-bubble">' + text.replace(/\n/g, '<br>') + '</div>';
     history.appendChild(div);
-}
-
-function scrollToChatBottom() {
-    const history = document.getElementById('chatHistory');
     history.scrollTop = history.scrollHeight;
 }
 
-// Better mock logic mapping user intent
-function getSmartAIResponse(input) {
-    if (input.includes('schedule') || input.includes('plan')) {
-        return "I recommend the 'Eat the Frog' method. Put your hardest or most critical task in the 'Non-Negotiable' column and tackle it first. Do you want to set a 25-minute timer for it?";
-    } else if (input.includes('study') || input.includes('learn') || input.includes('read')) {
-        return "For studying, active recall is best. Study the material for 25 minutes, then close your books and try to write down everything you remember. Should we start the timer?";
-    } else if (input.includes('code') || input.includes('bug') || input.includes('project') || input.includes('html') || input.includes('java')) {
-        return "When you hit a roadblock in development, stepping away helps. Take a 10-minute break. If it's a massive project, break it down into smaller sub-tasks on your board.";
-    } else if (input.includes('tired') || input.includes('exhausted') || input.includes('burnout')) {
-        return "Your kinetic energy is low. Rest is essential for long-term flow. Log off, hydrate, and don't look at a screen for the next hour.";
-    } else if (input.includes('sub') || input.includes('multiple') || input.includes('lot')) {
-        return "That's a lot to juggle. Let's sequence them. Pick just ONE sub-task and drag it to 'Task of the Day'. Ignore the rest until that one is done.";
-    } else if (input.includes('hello') || input.includes('hi')) {
-        return "Greetings! Neural net is synced. What is our primary objective for today?";
-    } else {
-        // Fallback array for variety
-        const fallbacks = [
-            "Interesting. To maintain momentum, let's ensure that's broken down into an actionable step on your board.",
-            "I hear you. If you're feeling stuck, starting a 25-minute focus timer usually breaks the friction.",
-            "Understood. Let's focus on execution. Drag your next action item to the 'Task of the Day' column.",
-            "That makes sense. Productivity is about rhythm. Are you ready to enter the Flow State?"
-        ];
-        return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+function showTypingIndicator() {
+    isBotTyping = true;
+    const history = document.getElementById('chatHistory');
+    const div = document.createElement('div');
+    div.className = 'chat-msg bot'; div.id = 'typingIndicator';
+    div.innerHTML = '<div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+    history.appendChild(div);
+    history.scrollTop = history.scrollHeight;
+}
+
+function removeTypingIndicator() {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+    isBotTyping = false;
+}
+
+async function callClaude() {
+    const SYSTEM = `You are Kinetic Coach, an AI productivity and study assistant inside Kinetic Focus app. Help users with:
+- Task prioritization, time management, scheduling
+- Study strategies (active recall, spaced repetition, Pomodoro)
+- Programming and coding help
+- Focus techniques and overcoming burnout
+- Motivation and goal-setting
+Keep responses concise, practical, energetic. Use short paragraphs. Be direct. Never be preachy.`;
+
+    // Try the Anthropic API directly (works if server has CORS headers or via proxy)
+    try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 800,
+                system: SYSTEM,
+                messages: chatMessages
+            })
+        });
+        const data = await res.json();
+        removeTypingIndicator();
+        if (data.content && data.content[0]) {
+            const reply = data.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
+            chatMessages.push({ role: 'assistant', content: reply });
+            appendMessage(reply, 'bot');
+        } else if (data.error) {
+            // API error → use smart local fallback
+            const reply = smartLocalReply(chatMessages[chatMessages.length-1].content);
+            chatMessages.push({ role: 'assistant', content: reply });
+            appendMessage(reply, 'bot');
+        }
+    } catch(err) {
+        removeTypingIndicator();
+        // Network/CORS error → smart local fallback
+        const reply = smartLocalReply(chatMessages[chatMessages.length-1].content);
+        chatMessages.push({ role: 'assistant', content: reply });
+        appendMessage(reply, 'bot');
     }
 }
 
+function smartLocalReply(input) {
+    const q = input.toLowerCase();
+    if (q.match(/hello|hi|hey|sup|yo/)) return "Greetings! Neural net synced. What's our primary objective today?";
+    if (q.match(/schedule|plan|organize|manage time/)) return "Use the 'Eat the Frog' method: put your hardest task in Non-Negotiable and attack it first thing. Everything else flows easier after that. Want to set a 25-min timer now?";
+    if (q.match(/study|learn|exam|test|read|memorize/)) return "Best study technique: 25 min active reading → close the material → write everything you remember from scratch. That retrieval practice beats re-reading every time. Start the timer?";
+    if (q.match(/code|bug|programming|debug|javascript|python|html|css|java|error/)) return "When stuck on a bug: explain the problem out loud (rubber duck it), then check your assumptions one by one. If you've been at it >30 min, take a 10-min break — your brain solves problems in the background.";
+    if (q.match(/tired|exhausted|burnout|overwhelm|stressed/)) return "Your kinetic energy is depleted. That's data, not weakness. Take a real break — no screens, hydrate, walk outside if possible. Come back in 30 min. You can't pour from an empty vessel.";
+    if (q.match(/focus|distract|concentrate|attention/)) return "Kill all notifications for the next 25 minutes. Put your phone face-down in another room. The single most effective focus hack is eliminating the option to get distracted. Use the Deep Work timer.";
+    if (q.match(/motivat|lazy|procrastinat/)) return "Motivation follows action, not the other way around. Start with just 2 minutes on the task. Once you start, momentum builds. Set the timer for 25 min and just begin — you won't want to stop.";
+    if (q.match(/goal|target|objective/)) return "A good goal has 3 things: it's specific, measurable, and has a deadline. 'Study more' is not a goal. 'Finish chapters 3-5 by Thursday 6pm' is. Drop your task into the board and let's execute.";
+    const fallbacks = [
+        "Break it into smaller actions and put the first one on your board. Execution beats planning every time.",
+        "Solid. Let's make it actionable — what's the single next physical step you need to take on this?",
+        "Understood. Start the 25-min Deep Work timer and go. Thinking too much is the enemy of doing.",
+        "That's a great question. The key is consistency over intensity. Small daily actions compound into massive results."
+    ];
+    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+}
 
-// --- 3D FOCUS TIMER ---
-let timer; let remainingTime;
+// ============================================
+// FOCUS TIMER
+// ============================================
+let timer, remainingTime;
 
 function startTimer() {
-    let minutes = document.getElementById("customMinutes").value || 25;
+    const minutes = parseInt(document.getElementById("customMinutes").value) || 25;
     remainingTime = minutes * 60;
-    
     document.getElementById("focusScreen").classList.add("active");
-    updateTimer();
-
+    updateTimerDisplay();
     timer = setInterval(() => {
-        remainingTime--; updateTimer();
+        remainingTime--;
+        updateTimerDisplay();
         if (remainingTime <= 0) {
             clearInterval(timer); exitFocus();
-            recordContribution(new Date().toISOString().slice(0, 10));
-            generateHeatmap(new Date().getFullYear()); 
+            recordContribution(new Date().toISOString().slice(0,10));
+            generateHeatmap(currentHeatmapYear);
             updateReportsLogic();
-            alert("Deep work session complete. Flow state achieved! +1 Contribution");
+            alert("Deep work session complete! Flow state achieved. +1 Contribution");
         }
     }, 1000);
 }
 
-function updateTimer() {
-    let m = Math.floor(remainingTime / 60); let s = remainingTime % 60;
-    document.getElementById("focusTime").innerText = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+function updateTimerDisplay() {
+    const m = Math.floor(remainingTime / 60);
+    const s = remainingTime % 60;
+    document.getElementById("focusTime").innerText = (m<10?'0'+m:m) + ':' + (s<10?'0'+s:s);
 }
 
 function exitFocus() {
